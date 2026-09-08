@@ -1,4 +1,7 @@
-from database import get_db_connection
+try:
+    from .database import get_db_connection
+except ImportError:  # Direct execution from the backend directory.
+    from database import get_db_connection
 
 
 def create_tables():
@@ -46,4 +49,3 @@ def create_tables():
 
     connection.commit()
     connection.close()
-    
