@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 from typing import Any
+from urllib import request
 
+from backend.services.recommendation import generate_recommendation
 from backend.services.session import ConversationSession
 from backend.services.conversation import merge_requests
 from backend.services.optimizer import create_plan
@@ -60,13 +62,16 @@ def process_message(
         }
 
     plan = create_plan(
-        request,
-        resources,
-        farmer_location,
+    request,
+    resources,
+    farmer_location,
     )
+
+    recommendation = generate_recommendation(plan)
 
     return {
         "status": "optimized",
         "request": request,
         "plan": plan,
+        "recommendation": recommendation,
     }

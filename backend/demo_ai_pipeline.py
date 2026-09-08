@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 
+from backend.services.pipeline import process_message
 from backend.services.parser import parse_request
 from backend.services.optimizer import create_plan
 
@@ -103,19 +104,14 @@ MESSAGE = (
 
 
 if __name__ == "__main__":
-    parsed_request = parse_request(
-        MESSAGE,
+    result = process_message(
+        message=MESSAGE,
         farmer_id=1,
+        resources=SAMPLE_RESOURCES,
+        farmer_location=RAJU_LOCATION,
     )
 
-    plan = create_plan(
-        parsed_request,
-        SAMPLE_RESOURCES,
-        RAJU_LOCATION,
-    )
+    print("\nKISANPOOL AI RESULT")
+    print(json.dumps(result, indent=2))
 
-    print("\nPARSED REQUEST")
-    print(json.dumps(parsed_request, indent=2))
-
-    print("\nOPTIMIZED PLAN")
-    print(json.dumps(plan, indent=2))
+    
