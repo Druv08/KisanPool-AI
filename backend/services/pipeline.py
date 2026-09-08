@@ -5,13 +5,13 @@ from __future__ import annotations
 from typing import Any
 from urllib import request
 
-from backend.services.recommendation import generate_recommendation
-from backend.services.session import ConversationSession
-from backend.services.conversation import merge_requests
-from backend.services.optimizer import create_plan
-from backend.services.parser import parse_request
-from backend.services.validator import (
-    get_missing_questions,
+from services.recommendation import generate_recommendation
+from services.session import ConversationSession
+from services.conversation import merge_requests
+from services.optimizer import create_plan
+from services.parser import parse_request
+from services.validator import (
+        get_missing_questions,
     validate_request,
 )
 

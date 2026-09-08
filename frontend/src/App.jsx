@@ -10,25 +10,79 @@ function App() {
   ]);
 
   const [input, setInput] = useState("");
+  const [impact, setImpact] = useState({
+    savings: 810,
+    normalCost: 2375,
+    optimizedCost: 1565,
+    distanceSaved: 37.1,
+    inputsReused: 10,
+  });
 
-  const sendMessage = () => {
+  const sendMessage = async () => {
     if (!input.trim()) return;
 
-    const userMessage = {
-      sender: "user",
-      text: input,
-    };
+    const userText = input.trim();
 
     setMessages((previous) => [
       ...previous,
-      userMessage,
       {
-        sender: "ai",
-        text: "Got it! I'm processing your farming request.",
+        sender: "user",
+        text: userText,
       },
     ]);
 
     setInput("");
+
+    try {
+      const response = await fetch("http://127.0.0.1:8000/ai/chat", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          farmer_id: 1,
+          message: userText,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Backend error: " + response.status);
+      }
+
+      const data = await response.json();
+
+      if (data.plan?.impact) {
+        setImpact({
+          savings: data.plan.impact.savings,
+          normalCost: data.plan.impact.normal_cost,
+          optimizedCost: data.plan.impact.optimized_cost,
+          distanceSaved: data.plan.impact.distance_saved_km,
+          inputsReused: data.plan.impact.input_reused_kg,
+        });
+      }
+
+      const recommendation = data.recommendation;
+
+      setMessages((previous) => [
+        ...previous,
+        {
+          sender: "ai",
+          text:
+            recommendation?.summary?.join(" ") ||
+            "Your farming request has been optimized successfully.",
+        },
+      ]);
+    } catch (error) {
+      console.error("Error connecting to KisanPool AI:", error);
+
+      setMessages((previous) => [
+        ...previous,
+        {
+          sender: "ai",
+          text: "Sorry, I couldn't connect to the KisanPool AI backend. Please make sure the backend is running.",
+        },
+      ]);
+    }
   };
 
   const handleKeyDown = (event) => {
@@ -86,7 +140,7 @@ function App() {
             <span className="stat-icon">💰</span>
             <div>
               <p>Money Saved</p>
-              <h2>₹810</h2>
+              <h2>₹{impact.savings}</h2>
             </div>
           </div>
 
@@ -94,7 +148,7 @@ function App() {
             <span className="stat-icon">🚜</span>
             <div>
               <p>Resources Shared</p>
-              <h2>4</h2>
+              <h2>3</h2>
             </div>
           </div>
 
@@ -102,7 +156,7 @@ function App() {
             <span className="stat-icon">🛣️</span>
             <div>
               <p>Travel Avoided</p>
-              <h2>37.1 km</h2>
+              <h2>{impact.distanceSaved} km</h2>
             </div>
           </div>
         </section>
@@ -166,28 +220,27 @@ function App() {
             </div>
 
             <div className="big-saving">
-              ₹810
-              <span>saved</span>
+              ₹{impact.savings} <span>saved</span>
             </div>
 
             <div className="impact-row">
               <span>Normal cost</span>
-              <strong>₹2375</strong>
+              <strong>₹{impact.normalCost}</strong>
             </div>
 
             <div className="impact-row">
               <span>Optimized cost</span>
-              <strong>₹1565</strong>
+              <strong>₹{impact.optimizedCost}</strong>
             </div>
 
             <div className="impact-row">
               <span>Travel avoided</span>
-              <strong>37.1 km</strong>
+              <strong>{impact.distanceSaved} km</strong>
             </div>
 
             <div className="impact-row">
               <span>Inputs reused</span>
-              <strong>10 kg</strong>
+              <strong>{impact.inputsReused} kg</strong>
             </div>
           </div>
         </section>

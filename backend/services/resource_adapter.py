@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 """Translate backend rows into the optimizer's framework-free data contract."""
 
 from __future__ import annotations
@@ -235,3 +236,119 @@ __all__ = [
     "normalize_resources",
     "village_location",
 ]
+=======
+from typing import Any
+
+from database import get_db_connection
+
+
+# Approximate coordinates for the demo villages.
+# These are used only so the optimizer can calculate distances.
+VILLAGE_COORDINATES = {
+    "Kattankulathur": {
+        "latitude": 12.823,
+        "longitude": 80.044,
+    },
+    "Potheri": {
+        "latitude": 12.828,
+        "longitude": 80.046,
+    },
+    "Maraimalai Nagar": {
+        "latitude": 12.820,
+        "longitude": 80.040,
+    },
+}
+
+
+def get_optimizer_resources() -> list[dict[str, Any]]:
+    """
+    Convert database resources into the format expected by optimizer.py.
+    """
+
+    connection = get_db_connection()
+
+    rows = connection.execute("""
+        SELECT
+            resources.*,
+            farmers.name AS owner_name
+        FROM resources
+        LEFT JOIN farmers
+            ON resources.owner_id = farmers.id
+    """).fetchall()
+
+    connection.close()
+
+    optimizer_resources = []
+
+    for row in rows:
+        resource = dict(row)
+
+        coordinates = VILLAGE_COORDINATES.get(
+            resource["village"],
+            {
+                "latitude": 12.823,
+                "longitude": 80.044,
+            },
+        )
+
+        resource_type = resource["resource_type"]
+
+        # Base optimizer-compatible resource
+        converted = {
+            "id": resource["id"],
+            "name": resource["name"],
+            "type": resource_type,
+            "owner_name": resource["owner_name"],
+            "price_per_hour": resource["price_per_hour"],
+            "status": "available" if resource["available"] else "unavailable",
+            "available_from": "08:00",
+            "available_until": "18:00",
+            "latitude": coordinates["latitude"],
+            "longitude": coordinates["longitude"],
+        }
+
+        # Convert seed resources into the format expected by
+        # find_input_suppliers().
+        if resource_type == "seed":
+            name = resource["name"].lower()
+
+            if "tomato" in name:
+                converted["subtype"] = "tomato_seed"
+            elif "paddy" in name or "rice" in name:
+                converted["subtype"] = "rice_seed"
+
+            converted["unit"] = "kg"
+
+            # Extract quantity from names such as:
+            # "Tomato Seeds - 10 kg"
+            quantity = 0
+
+            parts = name.split()
+
+            for i, part in enumerate(parts):
+                if part.replace(".", "", 1).isdigit():
+                    if i + 1 < len(parts) and parts[i + 1] in {
+                        "kg",
+                        "kgs",
+                        "kilo",
+                        "kilos",
+                    }:
+                        quantity = float(part)
+                        break
+
+            converted["quantity"] = quantity
+
+            # The existing database stores the seed price in
+            # price_per_hour, so treat that value as the total
+            # price for the listed quantity.
+            if quantity > 0:
+                converted["price_per_unit"] = (
+                    resource["price_per_hour"] / quantity
+                )
+            else:
+                converted["price_per_unit"] = 0
+
+        optimizer_resources.append(converted)
+
+    return optimizer_resources
+>>>>>>> eafa144 (Integrate KisanPool AI optimizer with frontend)

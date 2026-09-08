@@ -25,7 +25,7 @@ def generate_recommendation(plan: dict[str, Any]) -> dict[str, Any]:
         recommendations.append(
             f"Use {name} from {owner}. "
             f"It was selected based on cost, distance, and availability. "
-            f"Estimated machinery cost is ₹{cost} and the resource is "
+            f"Estimated machinery cost is Rs. {cost} and the resource is "
             f"{distance} km from the farm."
         )
     else:
@@ -64,7 +64,7 @@ def generate_recommendation(plan: dict[str, Any]) -> dict[str, Any]:
 
     if savings > 0:
         recommendations.append(
-            f"This optimized plan saves approximately ₹{savings} "
+            f"This optimized plan saves approximately Rs. {savings} "
             f"compared with the normal estimated cost."
         )
 

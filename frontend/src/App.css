@@ -164,6 +164,7 @@ h1 {
 .stat-card h2 {
   margin: 0;
   font-size: 24px;
+  color: #183c2a;
 }
 
 /* CARDS */
@@ -191,6 +192,7 @@ h1 {
 .card h2 {
   margin: 0;
   font-size: 21px;
+  color: #183c2a;
 }
 
 .ai-status {
@@ -426,4 +428,12 @@ h1 {
   .quick-actions {
     grid-template-columns: 1fr;
   }
+}
+
+.big-saving {
+  color: #183c2a;
+}
+
+.impact-row strong {
+  color: #183c2a;
 }
