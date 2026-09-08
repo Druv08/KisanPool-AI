@@ -7,6 +7,8 @@ from .optimizer import (
     find_best_solar_pump,
     find_input_suppliers,
 )
+from .planner_service import build_plan_from_backend_data
+from .resource_adapter import normalize_resource, normalize_resources, village_location
 
 __all__ = [
     "create_plan",
@@ -14,4 +16,8 @@ __all__ = [
     "find_best_machine",
     "find_best_solar_pump",
     "find_input_suppliers",
+    "build_plan_from_backend_data",
+    "normalize_resource",
+    "normalize_resources",
+    "village_location",
 ]
