@@ -1,0 +1,72 @@
+"""End-to-end KisanPool AI request pipeline."""
+
+from __future__ import annotations
+
+from typing import Any
+
+from backend.services.session import ConversationSession
+from backend.services.conversation import merge_requests
+from backend.services.optimizer import create_plan
+from backend.services.parser import parse_request
+from backend.services.validator import (
+    get_missing_questions,
+    validate_request,
+)
+
+
+def process_message(
+    message: str,
+    farmer_id: int,
+    resources: list[dict[str, Any]],
+    farmer_location: dict[str, float],
+    session: ConversationSession | None = None,
+    current_request: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+
+    
+    """Process a farmer message.
+
+    Parses the message, merges it with any previous request,
+    validates the combined request, and runs the optimizer
+    when enough information is available.
+    """
+
+    if session is not None:
+        current_request = session.get()
+
+    new_request = parse_request(
+        message,
+        farmer_id=farmer_id,
+    )
+
+    if current_request is not None:
+        request = merge_requests(
+            current_request,
+            new_request,
+        )
+    else:
+        request = new_request
+
+    if session is not None:
+        session.update(request)
+
+    validation = validate_request(request)
+
+    if not validation["valid"]:
+        return {
+            "status": "needs_information",
+            "request": request,
+            "questions": get_missing_questions(validation),
+        }
+
+    plan = create_plan(
+        request,
+        resources,
+        farmer_location,
+    )
+
+    return {
+        "status": "optimized",
+        "request": request,
+        "plan": plan,
+    }
