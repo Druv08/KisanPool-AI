@@ -74,7 +74,7 @@ def parse_request(
         "tomato",
         "rice",
         "wheat",
-        "cotton"
+        "cotton",
         "maize",
         "corn",
         "potato",

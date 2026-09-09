@@ -1808,3 +1808,140 @@ p {
     grid-template-columns: 1fr 1fr;
   }
 }
+
+/* =========================================================
+   RESOURCE DIRECTORY
+========================================================= */
+
+.resource-list {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 15px;
+  margin-top: 25px;
+}
+
+.resource-list-card {
+  padding: 20px;
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.resource-list-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 30px rgba(24, 60, 42, 0.1);
+  border-color: #cbdacf;
+}
+
+.resource-list-icon {
+  width: 50px;
+  height: 50px;
+  flex-shrink: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 13px;
+  background: var(--green-light);
+
+  font-size: 22px;
+}
+
+.resource-list-content {
+  flex: 1;
+}
+
+.resource-list-content h3 {
+  margin: 6px 0 4px;
+
+  color: var(--green-dark);
+  font-size: 16px;
+}
+
+.resource-list-content p {
+  margin: 0;
+
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.resource-list-content p strong {
+  color: #536159;
+}
+
+.resource-list-meta {
+  display: flex;
+  gap: 15px;
+  margin-top: 12px;
+
+  color: var(--green-dark);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.resource-list-meta span:last-child {
+  color: #42805a;
+}
+
+@media (max-width: 700px) {
+  .resource-list {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* =========================================
+   RESOURCE DIRECTORY
+========================================= */
+
+.resource-cost {
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--green-dark);
+}
+
+.resource-cost small {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--muted);
+  margin-left: 2px;
+}
+
+.resource-availability {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 700;
+}
+
+.availability-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.resource-availability.available {
+  color: #42805a;
+}
+
+.resource-availability.available .availability-dot {
+  background: #4f9d69;
+  box-shadow: 0 0 0 4px rgba(79, 157, 105, 0.12);
+}
+
+.resource-availability.unavailable {
+  color: #9b5b5b;
+}
+
+.resource-availability.unavailable .availability-dot {
+  background: #b96b6b;
+}
+
+.resource-list-content .resource-type {
+  letter-spacing: 0.08em;
+}

@@ -12,6 +12,10 @@ function App() {
   const [input, setInput] = useState("");
   const [plan, setPlan] = useState(null);
   const [page, setPage] = useState("dashboard");
+  const [resources, setResources] = useState([]);
+  const [myPlans, setMyPlans] = useState([]);
+  const [resourcesLoading, setResourcesLoading] = useState(false);
+
   const [farmerId, setFarmerId] = useState(1);
   const [loading, setLoading] = useState(false);
   const [bookingConfirmed, setBookingConfirmed] = useState(false);
@@ -26,14 +30,32 @@ function App() {
     inputsReused: 0,
   });
 
+  const loadResources = async () => {
+    setResourcesLoading(true);
+
+    try {
+      const response = await fetch("http://127.0.0.1:8000/resources");
+
+      if (!response.ok) {
+        throw new Error("Failed to load resources");
+      }
+
+      const data = await response.json();
+
+      setResources(data);
+    } catch (error) {
+      console.error("Failed to load resources:", error);
+    } finally {
+      setResourcesLoading(false);
+    }
+  };
+
   const sendMessage = async () => {
     const userText = input.trim();
 
     if (!userText || loading) return;
 
-    const requestToSend = pendingRequest
-      ? `${pendingRequest} for ${userText}`
-      : userText;
+    const requestToSend = userText;
 
     setMessages((previous) => [
       ...previous,
@@ -75,8 +97,6 @@ function App() {
         data.status === "needs_information" ||
         (response.status === 400 && data.detail)
       ) {
-        setPendingRequest((previous) => previous || userText);
-
         const questions = Array.isArray(data.questions)
           ? data.questions
           : data.detail
@@ -134,6 +154,11 @@ function App() {
     -------------------------------- */
 
       setPlan(data);
+
+      setMyPlans((previous) => [
+        data,
+        ...previous.filter((item) => item.plan_id !== data.plan_id),
+      ]);
 
       setPendingRequest("");
 
@@ -275,17 +300,20 @@ function App() {
           </button>
 
           <button
-            className="nav-item"
+            className={`nav-item ${page === "resources" ? "active" : ""}`}
             onClick={() => {
-              setPage("dashboard");
-              window.scrollTo({ top: 0, behavior: "smooth" });
+              setPage("resources");
+              loadResources();
             }}
           >
             <span>🚜</span>
             Resources
           </button>
 
-          <button className="nav-item" onClick={() => setPage("dashboard")}>
+          <button
+            className={`nav-item ${page === "plans" ? "active" : ""}`}
+            onClick={() => setPage("plans")}
+          >
             <span>▣</span>
             My Plans
           </button>
@@ -318,6 +346,108 @@ function App() {
       ========================================= */}
 
       <main className="main">
+        {page === "resources" && (
+          <section className="create-page">
+            <div className="create-container">
+              <button
+                className="page-back"
+                onClick={() => setPage("dashboard")}
+              >
+                ← Dashboard
+              </button>
+
+              <div className="create-hero">
+                <div className="ai-badge">
+                  <span>🚜</span>
+                  RESOURCE POOL
+                </div>
+
+                <h1>
+                  Resources around
+                  <br />
+                  <span>your farming community.</span>
+                </h1>
+
+                <p>
+                  Browse machinery, irrigation equipment and shared farm
+                  resources available through KisanPool.
+                </p>
+              </div>
+
+              {resourcesLoading ? (
+                <div className="card create-card">
+                  <p>Loading available resources...</p>
+                </div>
+              ) : resources.length === 0 ? (
+                <div className="card create-card">
+                  <p>No resources are currently available.</p>
+                </div>
+              ) : (
+                <div className="resource-list">
+                  {resources.map((resource) => (
+                    <div className="card resource-list-card" key={resource.id}>
+                      <div className="resource-list-icon">
+                        {resource.resource_type === "tractor" ||
+                        resource.resource_type === "rotavator"
+                          ? "🚜"
+                          : resource.resource_type === "solar_pump"
+                            ? "☀️"
+                            : "🌱"}
+                      </div>
+
+                      <div className="resource-list-content">
+                        <span className="resource-type">
+                          {resource.resource_type === "solar_pump"
+                            ? "SOLAR PUMP"
+                            : resource.resource_type === "tractor"
+                              ? "TRACTOR"
+                              : resource.resource_type === "rotavator"
+                                ? "ROTAVATOR"
+                                : resource.resource_type === "seed"
+                                  ? "SEEDS"
+                                  : resource.resource_type === "compost"
+                                    ? "COMPOST"
+                                    : resource.resource_type === "mulch"
+                                      ? "MULCH"
+                                      : resource.resource_type?.toUpperCase() ||
+                                        "RESOURCE"}
+                        </span>
+
+                        <h3>{resource.name}</h3>
+
+                        <p>
+                          Village: <strong>{resource.village}</strong>
+                        </p>
+
+                        <div className="resource-list-meta">
+                          <span className="resource-cost">
+                            ₹
+                            {Number(
+                              resource.price_per_hour || 0,
+                            ).toLocaleString("en-IN")}
+                            <small>/hr</small>
+                          </span>
+
+                          <span
+                            className={
+                              resource.available
+                                ? "resource-availability available"
+                                : "resource-availability unavailable"
+                            }
+                          >
+                            <span className="availability-dot"></span>
+                            {resource.available ? "Available" : "Unavailable"}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </section>
+        )}
+
         {/* =====================================
             CREATE PLAN PAGE
         ===================================== */}
@@ -533,72 +663,246 @@ function App() {
               </div>
             </section>
 
+            {/* =====================================
+            MY PLANS PAGE
+        ===================================== */}
+
+            {page === "plans" && (
+              <section className="create-page">
+                <div className="create-container">
+                  <button
+                    className="page-back"
+                    onClick={() => setPage("dashboard")}
+                  >
+                    ← Dashboard
+                  </button>
+
+                  <div className="create-hero">
+                    <div className="ai-badge">
+                      <span>▣</span>
+                      MY PLANS
+                    </div>
+
+                    <h1>
+                      Your farming
+                      <br />
+                      <span>plans.</span>
+                    </h1>
+
+                    <p>
+                      View the optimized resource plans you've created with
+                      KisanPool AI.
+                    </p>
+                  </div>
+
+                  {myPlans.length === 0 ? (
+                    <div className="card create-card empty-plans">
+                      <div className="empty-plans-icon">🌱</div>
+
+                      <h2>No plans yet</h2>
+
+                      <p>
+                        Create your first AI-powered farm plan and it will
+                        appear here.
+                      </p>
+
+                      <button
+                        className="create-plan-button"
+                        onClick={() => setPage("create")}
+                      >
+                        Create your first plan
+                        <span>→</span>
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="plans-list">
+                      {myPlans.map((savedPlan) => (
+                        <div
+                          className="card saved-plan-card"
+                          key={savedPlan.plan_id}
+                        >
+                          <div className="saved-plan-header">
+                            <div>
+                              <div className="ai-badge small">
+                                <span>✦</span>
+                                AI OPTIMIZED
+                              </div>
+
+                              <h2>
+                                {savedPlan.request?.crop
+                                  ? `${savedPlan.request.crop} farm plan`
+                                  : "Farm resource plan"}
+                              </h2>
+                            </div>
+
+                            <span className="plan-id">
+                              PLAN #{savedPlan.plan_id}
+                            </span>
+                          </div>
+
+                          <div className="saved-plan-details">
+                            {savedPlan.machinery && (
+                              <div className="saved-plan-resource">
+                                <span>🚜</span>
+
+                                <div>
+                                  <small>MACHINERY</small>
+
+                                  <strong>{savedPlan.machinery.name}</strong>
+                                </div>
+                              </div>
+                            )}
+
+                            {savedPlan.irrigation &&
+                              savedPlan.irrigation.status !==
+                                "not_requested" && (
+                                <div className="saved-plan-resource">
+                                  <span>☀️</span>
+
+                                  <div>
+                                    <small>IRRIGATION</small>
+
+                                    <strong>{savedPlan.irrigation.name}</strong>
+                                  </div>
+                                </div>
+                              )}
+
+                            {savedPlan.inputs &&
+                              savedPlan.inputs.length > 0 && (
+                                <div className="saved-plan-resource">
+                                  <span>🌱</span>
+
+                                  <div>
+                                    <small>SHARED INPUTS</small>
+
+                                    <strong>
+                                      {savedPlan.inputs.length} supplier
+                                      {savedPlan.inputs.length !== 1 ? "s" : ""}
+                                    </strong>
+                                  </div>
+                                </div>
+                              )}
+                          </div>
+
+                          {savedPlan.impact && (
+                            <div className="saved-plan-impact">
+                              <div>
+                                <small>SAVINGS</small>
+
+                                <strong>
+                                  ₹
+                                  {Number(
+                                    savedPlan.impact.savings || 0,
+                                  ).toLocaleString("en-IN")}
+                                </strong>
+                              </div>
+
+                              <div>
+                                <small>TRAVEL AVOIDED</small>
+
+                                <strong>
+                                  {savedPlan.impact.distance_saved_km || 0} km
+                                </strong>
+                              </div>
+
+                              <div>
+                                <small>SOLAR</small>
+
+                                <strong>
+                                  {savedPlan.impact.solar_hours || 0} hrs
+                                </strong>
+                              </div>
+                            </div>
+                          )}
+
+                          <button
+                            className="secondary-action"
+                            onClick={() => {
+                              setPlan(savedPlan);
+                              setPage("dashboard");
+                            }}
+                          >
+                            View plan
+                            <span>→</span>
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </section>
+            )}
+
             {/* =================================
                 DASHBOARD CONTENT
             ================================= */}
 
-            <section className="dashboard-grid">
-              <div className="card activity-card">
-                <div className="card-header">
-                  <div>
-                    <p className="eyebrow">QUICK ACTION</p>
+            {page === "dashboard" && (
+              <section className="dashboard-grid">
+                <div className="card activity-card">
+                  <div className="card-header">
+                    <div>
+                      <p className="eyebrow">QUICK ACTION</p>
 
-                    <h2>What are you working on?</h2>
+                      <h2>What are you working on?</h2>
+                    </div>
+
+                    <div className="card-header-icon">✦</div>
                   </div>
 
-                  <div className="card-header-icon">✦</div>
+                  <p className="card-description">
+                    Describe your farming requirement and KisanPool AI will
+                    match you with nearby resources.
+                  </p>
+
+                  <button
+                    className="secondary-action"
+                    onClick={() => setPage("create")}
+                  >
+                    Start planning
+                    <span>→</span>
+                  </button>
                 </div>
 
-                <p className="card-description">
-                  Describe your farming requirement and KisanPool AI will match
-                  you with nearby resources.
-                </p>
+                <div className="card impact-card">
+                  <div className="card-header">
+                    <div>
+                      <p className="eyebrow">RESOURCE POOLING</p>
 
-                <button
-                  className="secondary-action"
-                  onClick={() => setPage("create")}
-                >
-                  Start planning
-                  <span>→</span>
-                </button>
-              </div>
+                      <h2>Cost impact</h2>
+                    </div>
+                  </div>
 
-              <div className="card impact-card">
-                <div className="card-header">
-                  <div>
-                    <p className="eyebrow">RESOURCE POOLING</p>
+                  <div className="impact-row">
+                    <span>Normal estimated cost</span>
 
-                    <h2>Cost impact</h2>
+                    <strong>
+                      ₹{impact.normalCost.toLocaleString("en-IN")}
+                    </strong>
+                  </div>
+
+                  <div className="impact-row">
+                    <span>Optimized cost</span>
+
+                    <strong>
+                      ₹{impact.optimizedCost.toLocaleString("en-IN")}
+                    </strong>
+                  </div>
+
+                  <div className="impact-row highlight-row">
+                    <span>You save</span>
+
+                    <strong>₹{impact.savings.toLocaleString("en-IN")}</strong>
                   </div>
                 </div>
-
-                <div className="impact-row">
-                  <span>Normal estimated cost</span>
-
-                  <strong>₹{impact.normalCost.toLocaleString("en-IN")}</strong>
-                </div>
-
-                <div className="impact-row">
-                  <span>Optimized cost</span>
-
-                  <strong>
-                    ₹{impact.optimizedCost.toLocaleString("en-IN")}
-                  </strong>
-                </div>
-
-                <div className="impact-row highlight-row">
-                  <span>You save</span>
-
-                  <strong>₹{impact.savings.toLocaleString("en-IN")}</strong>
-                </div>
-              </div>
-            </section>
+              </section>
+            )}
 
             {/* =================================
                 AI PLAN
             ================================= */}
 
-            {plan && (
+            {page === "dashboard" && plan && (
               <section className="plan-section">
                 <div className="plan-card card">
                   {/* PLAN HEADER */}
