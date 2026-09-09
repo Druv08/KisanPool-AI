@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from email.mime import message
+from email import message
 from typing import Any
 from urllib import request
 
@@ -40,6 +42,12 @@ def process_message(
         message,
         farmer_id=farmer_id,
     )
+
+    print("========== PIPELINE DEBUG ==========")
+    print("CURRENT REQUEST:", current_request)
+    print("NEW REQUEST:", new_request)
+    print("MESSAGE:", message)
+    print("====================================")
 
     if current_request is not None:
         request = merge_requests(

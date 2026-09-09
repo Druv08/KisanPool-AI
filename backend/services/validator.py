@@ -10,24 +10,34 @@ def validate_request(request: dict[str, Any]) -> dict[str, Any]:
 
     missing: list[str] = []
 
-    # Crop is required to understand what the farmer is growing.
+    # --------------------------------------------------
+    # Crop
+    # --------------------------------------------------
+
     if not request.get("crop"):
         missing.append("crop")
 
-    # Farm area is required for machinery/time estimation.
+    # --------------------------------------------------
+    # Farm area
+    # --------------------------------------------------
+
     if request.get("area") is None:
         missing.append("area")
 
+    # --------------------------------------------------
+    # Resource requirement
+    # --------------------------------------------------
+
     requirements = request.get("requirements", {})
 
-    # At least one resource must be requested.
+    # Tractor or solar pump requested
     resource_requested = any(
         value is True
         for key, value in requirements.items()
         if key in {"tractor", "solar_pump"}
     )
 
-    # Seed requirements also count as a resource request.
+    # Seed requirement also counts as a resource request
     seed_requested = any(
         key.endswith("_seed_kg") and value is not None
         for key, value in requirements.items()
@@ -36,27 +46,51 @@ def validate_request(request: dict[str, Any]) -> dict[str, Any]:
     if not resource_requested and not seed_requested:
         missing.append("resource")
 
+    # --------------------------------------------------
+    # Validation result
+    # --------------------------------------------------
+
     return {
         "valid": len(missing) == 0,
         "missing": missing,
     }
 
-def get_missing_questions(validation: dict[str, Any]) -> list[str]:
-    """Convert missing fields into questions for the farmer."""
 
-    questions = []
+def get_missing_questions(
+    validation: dict[str, Any],
+) -> list[str]:
+    """Convert missing fields into clear questions for the farmer."""
 
-    for field in validation.get("missing", []):
-        if field == "crop":
-            questions.append("What crop are you growing?")
+    missing = validation.get("missing", [])
+    questions: list[str] = []
 
-        elif field == "area":
-            questions.append("How many acres is your farm?")
+    # --------------------------------------------------
+    # Crop + area
+    # --------------------------------------------------
 
-        elif field == "resource":
-            questions.append(
-                "What do you need help arranging, such as a tractor, "
-                "irrigation, or seeds?"
-            )
+    if "crop" in missing and "area" in missing:
+        questions.append(
+            "What crop are you growing, and how many acres is your farm?"
+        )
+
+    elif "crop" in missing:
+        questions.append(
+            "What crop are you growing?"
+        )
+
+    elif "area" in missing:
+        questions.append(
+            "How many acres is your farm?"
+        )
+
+    # --------------------------------------------------
+    # Resource
+    # --------------------------------------------------
+
+    if "resource" in missing:
+        questions.append(
+            "What do you need help arranging, such as a tractor, "
+            "irrigation, or seeds?"
+        )
 
     return questions
