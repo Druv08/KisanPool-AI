@@ -1,6 +1,8 @@
 import sqlite3
+from pathlib import Path
 
-DATABASE_NAME = "kisanpool.db"
+BASE_DIR = Path(__file__).resolve().parent
+DATABASE_NAME = BASE_DIR / "kisanpool.db"
 
 
 def get_db_connection():

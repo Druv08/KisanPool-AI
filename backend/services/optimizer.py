@@ -30,12 +30,12 @@ SOLAR_SCORE_WEIGHTS = {
 
 # Reference market rates used only for clearly labelled estimated impact.
 BASELINE_MACHINE_RATE_PER_HOUR = {
-    "tractor": 650.0,
-    "rotavator": 500.0,
-    "harvester": 1000.0,
+    "tractor": 900.0,
+    "rotavator": 700.0,
+    "harvester": 1200.0,
 }
 BASELINE_IRRIGATION_RATE_PER_HOUR = 200.0
-BASELINE_INPUT_RATE_PER_KG = 45.0
+BASELINE_INPUT_RATE_PER_KG = 60.0
 BASELINE_TRAVEL_KM_PER_PROVIDER = 10.0
 
 _UNAVAILABLE_STATUSES = {"reserved", "unavailable", "inactive", "maintenance"}
